@@ -3,9 +3,10 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
-var _Car_instances, _Car_move;
+var _Car_instances, _Car_assessDamage, _Car_createPolygon, _Car_move;
 import { Controls } from "./controls.js";
 import { Sensor } from "./sensor.js";
+import { polysIntersect } from "./utils.js";
 export class Car {
     constructor(x, y, width, height) {
         _Car_instances.add(this);
@@ -16,28 +17,67 @@ export class Car {
         this.speed = 0;
         this.maxSpeed = 6;
         this.friction = 0.05;
-        this.acceleration = 0.5;
+        this.acceleration = 0.25;
         this.angle = 0;
         this.steerSpeed = 0.06;
+        this.damaged = false;
         this.sensor = new Sensor(this);
         this.controls = new Controls();
+        this.polygon = [];
     }
     update(roadBorders) {
-        __classPrivateFieldGet(this, _Car_instances, "m", _Car_move).call(this);
+        if (!this.damaged) {
+            __classPrivateFieldGet(this, _Car_instances, "m", _Car_move).call(this);
+            this.polygon = __classPrivateFieldGet(this, _Car_instances, "m", _Car_createPolygon).call(this);
+            this.damaged = __classPrivateFieldGet(this, _Car_instances, "m", _Car_assessDamage).call(this, roadBorders);
+        }
         this.sensor.update(roadBorders);
     }
     draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(-this.angle);
+        if (this.damaged) {
+            ctx.fillStyle = 'gray';
+        }
+        else {
+            ctx.fillStyle = 'black';
+        }
         ctx.beginPath();
-        ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height);
+        ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
+        for (let i = 1; i < this.polygon.length; i++) {
+            ctx.lineTo(this.polygon[i].x, this.polygon[i].y);
+        }
         ctx.fill();
-        ctx.restore();
         this.sensor.draw(ctx);
     }
 }
-_Car_instances = new WeakSet(), _Car_move = function _Car_move() {
+_Car_instances = new WeakSet(), _Car_assessDamage = function _Car_assessDamage(roadBorders) {
+    for (let i = 0; i < roadBorders.length; i++) {
+        if (polysIntersect(this.polygon, roadBorders[i])) {
+            return true;
+        }
+    }
+    return false;
+}, _Car_createPolygon = function _Car_createPolygon() {
+    const points = [];
+    const rad = Math.hypot(this.width, this.height) / 2;
+    const alpha = Math.atan2(this.width, this.height);
+    points.push({
+        x: this.x - Math.sin(this.angle - alpha) * rad,
+        y: this.y - Math.cos(this.angle - alpha) * rad,
+    });
+    points.push({
+        x: this.x - Math.sin(this.angle + alpha) * rad,
+        y: this.y - Math.cos(this.angle + alpha) * rad,
+    });
+    points.push({
+        x: this.x - Math.sin(Math.PI + this.angle - alpha) * rad,
+        y: this.y - Math.cos(Math.PI + this.angle - alpha) * rad,
+    });
+    points.push({
+        x: this.x - Math.sin(Math.PI + this.angle + alpha) * rad,
+        y: this.y - Math.cos(Math.PI + this.angle + alpha) * rad,
+    });
+    return points;
+}, _Car_move = function _Car_move() {
     if (this.controls.forward) {
         this.speed += this.acceleration;
     }
