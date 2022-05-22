@@ -5,6 +5,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _Car_instances, _Car_assessDamage, _Car_createPolygon, _Car_move;
 import { Controls } from "./controls.js";
+import { NeuralNetwork } from "./network.js";
 import { Sensor } from "./sensor.js";
 import { polysIntersect } from "./utils.js";
 export class Car {
@@ -22,8 +23,10 @@ export class Car {
         this.angle = 0;
         this.steerSpeed = 0.06;
         this.damaged = false;
+        this.useBrain = controlType == 'AI';
         if (controlType != 'DUMMY') {
             this.sensor = new Sensor(this);
+            this.brain = new NeuralNetwork([this.sensor.rayCount, 6, 4]);
         }
         this.controls = new Controls(controlType);
         this.polygon = [];
@@ -36,6 +39,16 @@ export class Car {
         }
         if (this.sensor) {
             this.sensor.update(roadBorders, traffic);
+            const offsets = this.sensor.readings.map(s => {
+                return s == null ? 0 : 1 - s.offset;
+            });
+            const outputs = NeuralNetwork.feedForward(offsets, this.brain);
+            if (this.useBrain) {
+                this.controls.forward = Boolean(outputs[0]);
+                this.controls.left = Boolean(outputs[1]);
+                this.controls.right = Boolean(outputs[2]);
+                this.controls.reverse = Boolean(outputs[3]);
+            }
         }
     }
     draw(ctx, color) {
