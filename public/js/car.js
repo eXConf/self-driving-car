@@ -8,37 +8,42 @@ import { Controls } from "./controls.js";
 import { Sensor } from "./sensor.js";
 import { polysIntersect } from "./utils.js";
 export class Car {
-    constructor(x, y, width, height) {
+    constructor(x, y, width, height, controlType, maxSpeed = 3) {
         _Car_instances.add(this);
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+        this.controlType = controlType;
         this.speed = 0;
-        this.maxSpeed = 6;
+        this.maxSpeed = maxSpeed;
         this.friction = 0.05;
         this.acceleration = 0.25;
         this.angle = 0;
         this.steerSpeed = 0.06;
         this.damaged = false;
-        this.sensor = new Sensor(this);
-        this.controls = new Controls();
+        if (controlType != 'DUMMY') {
+            this.sensor = new Sensor(this);
+        }
+        this.controls = new Controls(controlType);
         this.polygon = [];
     }
-    update(roadBorders) {
+    update(roadBorders, traffic) {
         if (!this.damaged) {
             __classPrivateFieldGet(this, _Car_instances, "m", _Car_move).call(this);
             this.polygon = __classPrivateFieldGet(this, _Car_instances, "m", _Car_createPolygon).call(this);
-            this.damaged = __classPrivateFieldGet(this, _Car_instances, "m", _Car_assessDamage).call(this, roadBorders);
+            this.damaged = __classPrivateFieldGet(this, _Car_instances, "m", _Car_assessDamage).call(this, roadBorders, traffic);
         }
-        this.sensor.update(roadBorders);
+        if (this.sensor) {
+            this.sensor.update(roadBorders, traffic);
+        }
     }
-    draw(ctx) {
+    draw(ctx, color) {
         if (this.damaged) {
             ctx.fillStyle = 'gray';
         }
         else {
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = color;
         }
         ctx.beginPath();
         ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
@@ -46,12 +51,19 @@ export class Car {
             ctx.lineTo(this.polygon[i].x, this.polygon[i].y);
         }
         ctx.fill();
-        this.sensor.draw(ctx);
+        if (this.sensor) {
+            this.sensor.draw(ctx);
+        }
     }
 }
-_Car_instances = new WeakSet(), _Car_assessDamage = function _Car_assessDamage(roadBorders) {
+_Car_instances = new WeakSet(), _Car_assessDamage = function _Car_assessDamage(roadBorders, traffic) {
     for (let i = 0; i < roadBorders.length; i++) {
         if (polysIntersect(this.polygon, roadBorders[i])) {
+            return true;
+        }
+    }
+    for (let i = 0; i < traffic.length; i++) {
+        if (polysIntersect(this.polygon, traffic[i].polygon)) {
             return true;
         }
     }

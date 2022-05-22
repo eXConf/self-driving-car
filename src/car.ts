@@ -7,6 +7,7 @@ export class Car {
   y: number;
   width: number;
   height: number;
+  controlType: string;
 
   speed: number;
   maxSpeed: number;
@@ -16,43 +17,60 @@ export class Car {
   steerSpeed: number;
   damaged: boolean;
 
-  sensor: Sensor;
+  sensor: Sensor | undefined;
   controls: Controls;
 
   polygon: Point2D[];
 
-  constructor(x: number, y: number, width: number, height: number) {
+  constructor(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    controlType: string,
+    maxSpeed = 3,
+  ) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
+    this.controlType = controlType;
 
     this.speed = 0;
-    this.maxSpeed = 6;
+    this.maxSpeed = maxSpeed;
     this.friction = 0.05;
     this.acceleration = 0.25;
     this.angle = 0;
     this.steerSpeed = 0.06;
     this.damaged = false;
 
-    this.sensor = new Sensor(this);
-    this.controls = new Controls();
+    if (controlType != 'DUMMY') {
+      this.sensor = new Sensor(this);
+    }
+    this.controls = new Controls(controlType);
 
     this.polygon = [];
   }
 
-  update(roadBorders: Point2D[][]) {
+  update(roadBorders: Point2D[][], traffic: Car[]) {
     if (!this.damaged) {
       this.#move();
       this.polygon = this.#createPolygon();
-      this.damaged = this.#assessDamage(roadBorders);
+      this.damaged = this.#assessDamage(roadBorders, traffic);
     }
-    this.sensor.update(roadBorders);
+    if (this.sensor) {
+      this.sensor.update(roadBorders, traffic);
+    }
   }
 
-  #assessDamage(roadBorders: Point2D[][]): boolean {
+  #assessDamage(roadBorders: Point2D[][], traffic: Car[]): boolean {
     for (let i = 0; i < roadBorders.length; i++) {
       if (polysIntersect(this.polygon, roadBorders[i])) {
+        return true;
+      }
+    }
+    for (let i = 0; i < traffic.length; i++) {
+      if (polysIntersect(this.polygon, traffic[i].polygon)) {
         return true;
       }
     }
@@ -124,11 +142,11 @@ export class Car {
     this.y -= Math.cos(this.angle) * this.speed;
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  draw(ctx: CanvasRenderingContext2D, color: string,) {
     if (this.damaged) {
       ctx.fillStyle = 'gray';
     } else {
-      ctx.fillStyle = 'black';
+      ctx.fillStyle = color;
     }
     ctx.beginPath();
     ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
@@ -137,6 +155,8 @@ export class Car {
     }
     ctx.fill();
 
-    this.sensor.draw(ctx);
+    if (this.sensor) {
+      this.sensor.draw(ctx);
+    }
   }
 }

@@ -15,11 +15,11 @@ export class Sensor {
         this.rays = [];
         this.readings = [];
     }
-    update(roadBorders) {
+    update(roadBorders, traffic) {
         __classPrivateFieldGet(this, _Sensor_instances, "m", _Sensor_castRays).call(this);
         this.readings = [];
         for (let i = 0; i < this.rays.length; i++) {
-            const reading = __classPrivateFieldGet(this, _Sensor_instances, "m", _Sensor_getReading).call(this, this.rays[i], roadBorders);
+            const reading = __classPrivateFieldGet(this, _Sensor_instances, "m", _Sensor_getReading).call(this, this.rays[i], roadBorders, traffic);
             // if (reading) {
             //   this.readings.push(reading);
             // }
@@ -47,12 +47,21 @@ export class Sensor {
         }
     }
 }
-_Sensor_instances = new WeakSet(), _Sensor_getReading = function _Sensor_getReading(ray, roadBoarders) {
+_Sensor_instances = new WeakSet(), _Sensor_getReading = function _Sensor_getReading(ray, roadBoarders, traffic) {
     let touches = [];
     for (let i = 0; i < roadBoarders.length; i++) {
         const touch = getIntersection(ray[0], ray[1], roadBoarders[i][0], roadBoarders[i][1]);
         if (touch) {
             touches.push(touch);
+        }
+    }
+    for (let i = 0; i < traffic.length; i++) {
+        const poly = traffic[i].polygon;
+        for (let j = 0; j < poly.length; j++) {
+            const touch = getIntersection(ray[0], ray[1], poly[j], poly[(j + 1) % poly.length]);
+            if (touch) {
+                touches.push(touch);
+            }
         }
     }
     if (touches.length === 0) {

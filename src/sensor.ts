@@ -20,12 +20,16 @@ export class Sensor {
     this.readings = [];
   }
 
-  update(roadBorders: Point2D[][]) {
+  update(roadBorders: Point2D[][], traffic: Car[]) {
     this.#castRays();
     this.readings = [];
 
     for (let i = 0; i < this.rays.length; i++) {
-      const reading = this.#getReading(this.rays[i], roadBorders);
+      const reading = this.#getReading(
+        this.rays[i],
+        roadBorders,
+        traffic,
+      );
       // if (reading) {
       //   this.readings.push(reading);
       // }
@@ -33,7 +37,11 @@ export class Sensor {
     }
   }
 
-  #getReading(ray: Point2D[], roadBoarders: Point2D[][]): Intersection | null {
+  #getReading(
+    ray: Point2D[],
+    roadBoarders: Point2D[][],
+    traffic: Car[],
+  ): Intersection | null {
     let touches: Intersection[] = [];
 
     for (let i = 0; i < roadBoarders.length; i++) {
@@ -47,6 +55,23 @@ export class Sensor {
       if (touch) {
         touches.push(touch);
       }
+    }
+
+    for (let i = 0; i < traffic.length; i++) {
+      const poly = traffic[i].polygon;
+
+      for (let j = 0; j < poly.length; j++) {
+        const touch: Intersection | null = getIntersection(
+          ray[0],
+          ray[1],
+          poly[j],
+          poly[(j + 1) % poly.length],
+        );
+        if (touch) {
+          touches.push(touch);
+        }
+      }
+
     }
 
     if (touches.length === 0) {

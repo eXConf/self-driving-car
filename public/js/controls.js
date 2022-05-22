@@ -5,13 +5,22 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _Controls_instances, _Controls_addKeyboardListeners;
 export class Controls {
-    constructor() {
+    constructor(type) {
         _Controls_instances.add(this);
         this.forward = false;
         this.left = false;
         this.right = false;
         this.reverse = false;
-        __classPrivateFieldGet(this, _Controls_instances, "m", _Controls_addKeyboardListeners).call(this);
+        switch (type) {
+            case 'KEYS':
+                __classPrivateFieldGet(this, _Controls_instances, "m", _Controls_addKeyboardListeners).call(this);
+                break;
+            case 'DUMMY':
+                this.forward = true;
+                break;
+            default:
+                break;
+        }
     }
 }
 _Controls_instances = new WeakSet(), _Controls_addKeyboardListeners = function _Controls_addKeyboardListeners() {
