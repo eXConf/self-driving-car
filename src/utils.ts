@@ -57,3 +57,9 @@ export function polysIntersect(
   }
   return false;
 }
+
+export function getHSLA(value: number): string {
+  const alpha = Math.abs(value);
+  const hue = value < 0 ? 10 : 222;
+  return `hsla(${hue}, 100%, 80%, ${alpha})`;
+}
