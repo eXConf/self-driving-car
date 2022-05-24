@@ -18,6 +18,7 @@ export class Car {
   angle: number;
   steerSpeed: number;
   damaged: boolean;
+  shouldBeDeleted: boolean;
 
   useBrain: boolean;
 
@@ -47,6 +48,7 @@ export class Car {
     this.angle = 0;
     this.steerSpeed = 0.06;
     this.damaged = false;
+    this.shouldBeDeleted = false;
     this.useBrain = controlType == 'AI';
 
     if (controlType != 'DUMMY') {

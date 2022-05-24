@@ -16,8 +16,8 @@ renderButtons();
 
 const road = new Road(carCanvas.width / 2, carCanvas.width * 0.9);
 
-const N = 250;
-const cars = generateCars(N);
+const N = 1000;
+let cars = generateCars(N);
 let bestCar = cars[0];
 
 const lsBestBrain = localStorage.getItem('bestBrain');
@@ -62,6 +62,8 @@ function generateCars(N: number) {
 }
 
 function animate() {
+  cars = cars.filter(car => !car.shouldBeDeleted);
+
   for (let i = 0; i < traffic.length; i++) {
     traffic[i].update(road.borders, []);
   }
@@ -72,6 +74,10 @@ function animate() {
     cars[i].update(road.borders, traffic);
 
     if (!cars[i].damaged) alive += 1;
+    if (cars[i].damaged) {
+      const car = cars[i];
+      setTimeout(() => car.shouldBeDeleted = true, 2000)
+    }
   }
 
   bestCar = cars.find(c => c.y == Math.min(...cars.map(c => c.y)))!;
@@ -107,9 +113,9 @@ function animate() {
   carCtx.textBaseline = 'middle';
   carCtx.strokeStyle = 'black';
   carCtx.font = '30px Arial';
-  carCtx.fillText(alive.toString(), carCanvas.width/2, 20);
+  carCtx.fillText(alive.toString(), carCanvas.width / 2, 20);
   carCtx.lineWidth = 0.6;
-  carCtx.strokeText(alive.toString(), carCanvas.width/2, 20);
+  carCtx.strokeText(alive.toString(), carCanvas.width / 2, 20);
 
   requestAnimationFrame(animate);
 }
