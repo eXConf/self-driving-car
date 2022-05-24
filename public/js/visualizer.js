@@ -12,9 +12,14 @@ export class Visualizer {
         const top = margin;
         const width = ctx.canvas.width - margin * 2;
         const height = ctx.canvas.height - margin * 2;
-        Visualizer.drawLevel(ctx, network.levels[0], left, top, width, height);
+        const levelHeight = height / network.levels.length;
+        for (let i = network.levels.length - 1; i >= 0; i--) {
+            const levelTop = top +
+                lerp(height - levelHeight, 0, network.levels.length == 1 ? 0.5 : i / (network.levels.length - 1));
+            Visualizer.drawLevel(ctx, network.levels[i], left, levelTop, width, levelHeight, i == network.levels.length - 1 ? ['🠉', '🠈', '🠊', '🠋'] : []);
+        }
     }
-    static drawLevel(ctx, level, left, top, width, height) {
+    static drawLevel(ctx, level, left, top, width, height, outputLabels) {
         const right = left + width;
         const bottom = top + height;
         const { inputs, outputs, weights, biases } = level;
@@ -57,6 +62,17 @@ export class Visualizer {
             ctx.setLineDash([3, 3]);
             ctx.stroke();
             ctx.setLineDash([]);
+            if (outputLabels[i]) {
+                ctx.beginPath();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'yellow';
+                ctx.strokeStyle = 'black';
+                ctx.font = (nodeRadius * 1.0) + 'px Arial';
+                ctx.fillText(outputLabels[i], x, top);
+                ctx.lineWidth = 1;
+                ctx.strokeText(outputLabels[i], x, top);
+            }
         }
     }
 }
