@@ -2,6 +2,7 @@ import { Road } from "./road.js";
 import { Car } from "./car.js";
 import { Visualizer } from "./visualizer.js";
 import { NeuralNetwork } from "./network.js";
+import { getRandomColor } from "./utils.js";
 const carCanvas = document.getElementById('carCanvas');
 carCanvas.width = 200;
 const networkCanvas = document.getElementById('networkCanvas');
@@ -23,13 +24,13 @@ if (lsBestBrain) {
     }
 }
 const traffic = [
-    new Car(road.getLaneCenter(1), -100, 30, 50, 'DUMMY', 2),
-    new Car(road.getLaneCenter(0), -300, 30, 50, 'DUMMY', 2),
-    new Car(road.getLaneCenter(2), -300, 30, 50, 'DUMMY', 2),
-    new Car(road.getLaneCenter(0), -500, 30, 50, 'DUMMY', 2),
-    new Car(road.getLaneCenter(1), -500, 30, 50, 'DUMMY', 2),
-    new Car(road.getLaneCenter(1), -700, 30, 50, 'DUMMY', 2),
-    new Car(road.getLaneCenter(2), -700, 30, 50, 'DUMMY', 2),
+    new Car(road.getLaneCenter(1), -100, 30, 50, 'DUMMY', 2, getRandomColor()),
+    new Car(road.getLaneCenter(0), -300, 30, 50, 'DUMMY', 2, getRandomColor()),
+    new Car(road.getLaneCenter(2), -300, 30, 50, 'DUMMY', 2, getRandomColor()),
+    new Car(road.getLaneCenter(0), -500, 30, 50, 'DUMMY', 2, getRandomColor()),
+    new Car(road.getLaneCenter(1), -500, 30, 50, 'DUMMY', 2, getRandomColor()),
+    new Car(road.getLaneCenter(1), -700, 30, 50, 'DUMMY', 2, getRandomColor()),
+    new Car(road.getLaneCenter(2), -700, 30, 50, 'DUMMY', 2, getRandomColor()),
 ];
 animate();
 function save() {
@@ -51,30 +52,31 @@ function animate() {
         traffic[i].update(road.borders, []);
     }
     let alive = 0;
+    bestCar = cars.find(c => c.y == Math.min(...cars.map(c => c.y)));
     for (let i = 0; i < cars.length; i++) {
         cars[i].update(road.borders, traffic);
         if (!cars[i].damaged)
             alive += 1;
-        if (cars[i].damaged) {
+        const isFarBehind = cars[i].y - bestCar.y > 300;
+        if (cars[i].damaged || isFarBehind) {
             const car = cars[i];
             setTimeout(() => car.shouldBeDeleted = true, 2000);
         }
     }
-    bestCar = cars.find(c => c.y == Math.min(...cars.map(c => c.y)));
     carCanvas.height = window.innerHeight;
     networkCanvas.height = window.innerHeight;
     carCtx.save();
     carCtx.translate(0, -bestCar.y + carCanvas.height * 0.7);
     road.draw(carCtx);
     for (let i = 0; i < traffic.length; i++) {
-        traffic[i].draw(carCtx, 'red');
+        traffic[i].draw(carCtx);
     }
     carCtx.globalAlpha = 0.2;
     for (let i = 0; i < cars.length; i++) {
-        cars[i].draw(carCtx, 'blue');
+        cars[i].draw(carCtx);
     }
     carCtx.globalAlpha = 1;
-    bestCar.draw(carCtx, 'blue', true);
+    bestCar.draw(carCtx, true);
     carCtx.restore();
     if (bestCar.brain != undefined) {
         Visualizer.drawNetwork(networkCtx, bestCar.brain);

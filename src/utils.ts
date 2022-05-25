@@ -63,3 +63,9 @@ export function getHSLA(value: number): string {
   const hue = value < 0 ? 10 : 222;
   return `hsla(${hue}, 100%, 80%, ${alpha})`;
 }
+
+export function getRandomColor() {
+  const hue = 290 + Math.random() * 260;
+  
+  return `hsl(${hue}, 100%, 60%)`;
+}

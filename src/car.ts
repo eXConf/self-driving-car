@@ -24,6 +24,9 @@ export class Car {
 
   sensor: Sensor | undefined;
   controls: Controls;
+  img: HTMLImageElement;
+  color: string;
+  mask: HTMLCanvasElement;
 
   polygon: Point2D[];
 
@@ -34,6 +37,7 @@ export class Car {
     height: number,
     controlType: string,
     maxSpeed = 3,
+    color = 'rgb(78,147,244)',
   ) {
     this.x = x;
     this.y = y;
@@ -58,6 +62,27 @@ export class Car {
       );
     }
     this.controls = new Controls(controlType);
+
+    this.img = new Image();
+    this.img.src = 'img/car.png';
+    this.color = color;
+
+    this.mask = document.createElement('canvas');
+    this.mask.width = width;
+    this.mask.height = height;
+
+    const maskCtx = this.mask.getContext('2d');
+    if (maskCtx) {
+      this.img.onload = () => {
+        maskCtx.fillStyle = color;
+        maskCtx.rect(0, 0, this.width, this.height);
+        maskCtx.fill();
+
+        maskCtx.globalCompositeOperation = 'destination-atop';
+        maskCtx.drawImage(this.img, 0, 0, this.width, this.height);
+
+      }
+    }
 
     this.polygon = [];
   }
@@ -167,23 +192,31 @@ export class Car {
 
   draw(
     ctx: CanvasRenderingContext2D,
-    color: string,
     drawSensor: boolean = false
   ) {
-    if (this.damaged) {
-      ctx.fillStyle = 'gray';
-    } else {
-      ctx.fillStyle = color;
-    }
-    ctx.beginPath();
-    ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
-    for (let i = 1; i < this.polygon.length; i++) {
-      ctx.lineTo(this.polygon[i].x, this.polygon[i].y);
-    }
-    ctx.fill();
-
     if (this.sensor && drawSensor) {
       this.sensor.draw(ctx);
     }
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(-this.angle);
+    if (!this.damaged) {
+      ctx.drawImage(this.mask,
+        -this.width / 2,
+        -this.height / 2,
+        this.width,
+        this.height
+      );
+      ctx.globalCompositeOperation = 'multiply';
+    }
+    ctx.drawImage(this.img,
+      -this.width / 2,
+      -this.height / 2,
+      this.width,
+      this.height
+    );
+    ctx.restore();
+
   }
 }
