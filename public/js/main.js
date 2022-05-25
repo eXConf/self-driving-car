@@ -6,7 +6,7 @@ import { getRandomColor } from "./utils.js";
 const carCanvas = document.getElementById('carCanvas');
 carCanvas.width = 200;
 const networkCanvas = document.getElementById('networkCanvas');
-networkCanvas.width = 300;
+networkCanvas.width = 600;
 const carCtx = carCanvas.getContext('2d');
 const networkCtx = networkCanvas.getContext('2d');
 renderButtons();
@@ -18,8 +18,23 @@ const lsBestBrain = localStorage.getItem('bestBrain');
 if (lsBestBrain) {
     for (let i = 0; i < cars.length; i++) {
         cars[i].brain = JSON.parse(lsBestBrain);
-        if (i != 0) {
+        if (i == 0) {
+            //
+        }
+        else if (i % 5 === 0) {
+            NeuralNetwork.mutate(cars[i].brain, 0.01);
+        }
+        else if (i % 5 === 1) {
+            NeuralNetwork.mutate(cars[i].brain, 0.05);
+        }
+        else if (i % 5 === 2) {
+            NeuralNetwork.mutate(cars[i].brain, 0.1);
+        }
+        else if (i % 5 === 3) {
             NeuralNetwork.mutate(cars[i].brain, 0.2);
+        }
+        else if (i % 5 === 4) {
+            NeuralNetwork.mutate(cars[i].brain, 0.4);
         }
     }
 }
@@ -63,7 +78,7 @@ function animate(time) {
         cars[i].update(road.borders, traffic);
         if (!cars[i].damaged)
             alive += 1;
-        const isFarBehind = cars[i].y - bestCar.y > 1000;
+        const isFarBehind = cars[i].y - bestCar.y > 500;
         if (cars[i].damaged || isFarBehind) {
             const car = cars[i];
             setTimeout(() => car.shouldBeDeleted = true, 2000);
@@ -113,7 +128,7 @@ function renderButtons() {
     carCanvas.after(div);
 }
 function addTrafficCar() {
-    const randomOffset = Math.floor(Math.random() * (250 - 100)) + 100;
+    const randomOffset = Math.floor(Math.random() * (350 - 150)) + 150;
     const y = traffic[traffic.length - 1].y - randomOffset;
     const lane = getLane();
     const car1 = new Car(road.getLaneCenter(lane), y, 30, 50, 'DUMMY', 2, getRandomColor());

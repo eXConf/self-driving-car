@@ -12,9 +12,9 @@ export class Sensor {
 
   constructor(car: Car) {
     this.car = car;
-    this.rayCount = 5;
+    this.rayCount = 11;
     this.rayLength = 150;
-    this.raySpread = Math.PI / 2;
+    this.raySpread = Math.PI;
 
     this.rays = [];
     this.readings = [];
@@ -30,9 +30,6 @@ export class Sensor {
         roadBorders,
         traffic,
       );
-      // if (reading) {
-      //   this.readings.push(reading);
-      // }
       this.readings.push(reading);
     }
   }

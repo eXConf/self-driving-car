@@ -9,9 +9,9 @@ export class Sensor {
     constructor(car) {
         _Sensor_instances.add(this);
         this.car = car;
-        this.rayCount = 5;
+        this.rayCount = 11;
         this.rayLength = 150;
-        this.raySpread = Math.PI / 2;
+        this.raySpread = Math.PI;
         this.rays = [];
         this.readings = [];
     }
@@ -20,9 +20,6 @@ export class Sensor {
         this.readings = [];
         for (let i = 0; i < this.rays.length; i++) {
             const reading = __classPrivateFieldGet(this, _Sensor_instances, "m", _Sensor_getReading).call(this, this.rays[i], roadBorders, traffic);
-            // if (reading) {
-            //   this.readings.push(reading);
-            // }
             this.readings.push(reading);
         }
     }
