@@ -32,7 +32,7 @@ const traffic = [
     new Car(road.getLaneCenter(1), -700, 30, 50, 'DUMMY', 2, getRandomColor()),
     new Car(road.getLaneCenter(2), -700, 30, 50, 'DUMMY', 2, getRandomColor()),
 ];
-animate();
+animate(0);
 function save() {
     localStorage.setItem('bestBrain', JSON.stringify(bestCar.brain));
 }
@@ -46,18 +46,24 @@ function generateCars(N) {
     }
     return cars;
 }
-function animate() {
+function animate(time) {
     cars = cars.filter(car => !car.shouldBeDeleted);
     for (let i = 0; i < traffic.length; i++) {
         traffic[i].update(road.borders, []);
     }
     let alive = 0;
     bestCar = cars.find(c => c.y == Math.min(...cars.map(c => c.y)));
+    if (bestCar.y - traffic[traffic.length - 1].y < 1000) {
+        addTrafficCar();
+    }
+    if (traffic[0].y - bestCar.y > 2000) {
+        traffic.shift();
+    }
     for (let i = 0; i < cars.length; i++) {
         cars[i].update(road.borders, traffic);
         if (!cars[i].damaged)
             alive += 1;
-        const isFarBehind = cars[i].y - bestCar.y > 300;
+        const isFarBehind = cars[i].y - bestCar.y > 1000;
         if (cars[i].damaged || isFarBehind) {
             const car = cars[i];
             setTimeout(() => car.shouldBeDeleted = true, 2000);
@@ -86,10 +92,11 @@ function animate() {
     carCtx.textAlign = 'center';
     carCtx.textBaseline = 'middle';
     carCtx.strokeStyle = 'black';
-    carCtx.font = '30px Arial';
-    carCtx.fillText(alive.toString(), carCanvas.width / 2, 20);
+    carCtx.font = '26px Arial';
+    const text = `${alive} | ${Math.floor(time / 1000)}s`;
+    carCtx.fillText(text, carCanvas.width / 2, 20);
     carCtx.lineWidth = 0.6;
-    carCtx.strokeText(alive.toString(), carCanvas.width / 2, 20);
+    carCtx.strokeText(text, carCanvas.width / 2, 20);
     requestAnimationFrame(animate);
 }
 function renderButtons() {
@@ -104,4 +111,22 @@ function renderButtons() {
     div.appendChild(saveBtn);
     div.appendChild(discardBtn);
     carCanvas.after(div);
+}
+function addTrafficCar() {
+    const randomOffset = Math.floor(Math.random() * (250 - 100)) + 100;
+    const y = traffic[traffic.length - 1].y - randomOffset;
+    const lane = getLane();
+    const car1 = new Car(road.getLaneCenter(lane), y, 30, 50, 'DUMMY', 2, getRandomColor());
+    traffic.push(car1);
+    if (Math.floor(Math.random() * 100) > 75) {
+        let otherLane = lane;
+        while (otherLane === lane) {
+            otherLane = getLane();
+        }
+        const car2 = new Car(road.getLaneCenter(otherLane), y, 30, 50, 'DUMMY', 2, getRandomColor());
+        traffic.push(car2);
+    }
+}
+function getLane() {
+    return Math.floor(Math.random() * road.laneCount);
 }
